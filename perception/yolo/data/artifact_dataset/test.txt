@@ -1,0 +1,11 @@
+./artifact_dataset/Images/backpackSurvivor/frame0106.jpg
+./artifact_dataset/Images/backpackSurvivor/frame0077.jpg
+./artifact_dataset/Images/backpackSurvivor/frame0018.jpg
+./artifact_dataset/Images/backpackSurvivor/frame0086.jpg
+./artifact_dataset/Images/backpackSurvivor/frame0035.jpg
+./artifact_dataset/Images/backpackSurvivor/frame0030.jpg
+./artifact_dataset/Images/backpackSurvivor/frame0100.jpg
+./artifact_dataset/Images/backpackSurvivor/frame0104.jpg
+./artifact_dataset/Images/backpackSurvivor/frame0006.jpg
+./artifact_dataset/Images/backpackSurvivor/frame0033.jpg
+./artifact_dataset/Images/backpackSurvivor/frame0039.jpg
