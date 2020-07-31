@@ -1,6 +1,0 @@
-classes = 2
-
-valid  = test.txt
-names = classes.names
-backup = weights/
-train  = /home/developer/subt_ws/src/perception/yolo/data/artifact_dataset/train.txt
