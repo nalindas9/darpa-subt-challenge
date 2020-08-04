@@ -1,0 +1,8 @@
+prefix=/home/developer/costar_husky_1/install
+
+Name: husky1_vision
+Description: Description of husky1_vision
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: roscpp

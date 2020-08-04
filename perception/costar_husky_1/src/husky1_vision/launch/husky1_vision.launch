@@ -1,0 +1,3 @@
+<launch>
+    <node name = "report" pkg = "husky1_vision" type = "report" output = "screen"/>
+</launch>
