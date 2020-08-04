@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 from cv_bridge import CvBridge
-
+from std_msgs.msg import String
 from sensor_msgs.msg import Image as Imagemsg
 import rospy
 import cv2
@@ -90,6 +90,7 @@ def inference(orig_img, img, model, opt, classes):
         cv2.putText(infer_image, str(classes[int(cls_pred)]) + ' ' + str(cls_conf.item()), (x1-70, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (36,255,12), 2)
         #cv2.imshow("Image", infer_image)
         #cv2.waitKey(1)
+        return str(classes[int(cls_pred)])
         
 def img_callback(msg):
     global im_pil
@@ -106,6 +107,8 @@ def img_callback(msg):
 def main():
     # Initialize ros node
     rospy.init_node("object_detector", anonymous=True)
+    # Publish detected artifact to "artifact" topic
+    artifact_detector = rospy.Publisher("artifact", String, queue_size=10)
     # Subrscribe to incoming image stream
     rospy.Subscriber("/COSTAR_HUSKY/front/image_raw", Imagemsg, img_callback)
     # Initialize model
@@ -119,7 +122,8 @@ def main():
         trans_img = trans_img.unsqueeze(0)
         #print(trans_img)
         #detections = model(batch)
-        inference(im_pil, trans_img, model, opt, classes)
+        detected_artifact = inference(im_pil, trans_img, model, opt, classes)
+        artifact_detector.publish(detected_artifact)
     #rospy.sleep(1)
     rospy.spin()
 
