@@ -10,6 +10,8 @@ Graduate Student pursuing Masters in Robotics,
 University of Maryland, College Park
 """
 
+import sys
+sys.path.append('/opt/ros/melodic/lib/python2.7/dist-packages')
 from utils.utils import *
 import torch
 import argparse
@@ -19,7 +21,9 @@ from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
+sys.path.remove('/opt/ros/melodic/lib/python2.7/dist-packages')
 from cv_bridge import CvBridge
+sys.path.append('/opt/ros/melodic/lib/python2.7/dist-packages')
 from std_msgs.msg import String
 from sensor_msgs.msg import Image as Imagemsg
 import rospy
