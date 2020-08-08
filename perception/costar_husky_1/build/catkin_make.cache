@@ -1,2 +1,0 @@
-husky1_vision
--DCATKIN_DEVEL_PREFIX=/home/developer/costar_husky_1/devel -DCMAKE_INSTALL_PREFIX=/home/developer/costar_husky_1/install -G Unix Makefiles

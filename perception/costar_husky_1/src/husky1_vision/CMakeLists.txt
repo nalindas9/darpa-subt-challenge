@@ -132,7 +132,8 @@ ${catkin_INCLUDE_DIRS}
 
 add_executable(report src/report.cpp)
 target_link_libraries(report ${catkin_LIBRARIES})
-
+add_executable(find_artifact_origin src/find_artifact_origin.cpp)
+target_link_libraries(find_artifact_origin ${catkin_LIBRARIES})
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
