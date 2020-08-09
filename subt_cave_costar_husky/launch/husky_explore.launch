@@ -1,0 +1,14 @@
+<launch>
+
+    <!-- create laserscan from pointcloud for VFH -->
+    <include file="$(find subt_cave_costar_husky)/launch/husky_pc2scan.launch" />
+
+    <!-- start octomapping -->
+    <include file="$(find subt_cave_costar_husky)/launch/husky_octomap.launch" />
+
+    <!-- start exploration -->
+    <node pkg="subt_cave_costar_husky" type="husky_explore" name="husky_explore" output="screen"/> 
+
+
+
+</launch>
