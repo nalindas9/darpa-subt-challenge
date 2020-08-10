@@ -71,7 +71,6 @@ def init_model():
     
 def inference(orig_img, img, model, opt, classes):
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-    print("Performing object detection ...")
     img = Variable(img.type(Tensor))
     # Forward pass of image to get detections and performing non-max suppression
     with torch.no_grad():
@@ -95,6 +94,8 @@ def inference(orig_img, img, model, opt, classes):
         #cv2.imshow("Image", infer_image)
         #cv2.waitKey(1)
         return str(classes[int(cls_pred)])
+    else: 
+        return "None" 
         
 def img_callback(msg):
     global im_pil
