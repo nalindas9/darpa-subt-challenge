@@ -32,11 +32,11 @@ int main(int argc, char *argv[])
   ros::NodeHandle nh;
 
   ros::NodeHandle private_nh("~");
-  private_nh.param("robot_name", robot_name, std::string("COSTAR_HUSKY"));
+  private_nh.param("robot_name", robot_name, std::string("COSTAR_HUSKY/base_link/front_laser"));
   private_nh.param("base_link_frame", base_link_frame, robot_name);
   private_nh.param("map_frame", map_frame, robot_name + "/map");
   private_nh.param("artifact_origin_frame", artifact_origin_frame, std::string("artifact_origin"));
-  map_frame = "simple_cave_01";
+  map_frame = "odom";
   ROS_INFO_STREAM(
     "artifact_origin_finder values..." << std::endl <<
     "robot_name: " << robot_name << std::endl <<
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
   // set up service call
   ros::ServiceClient client = nh.serviceClient<subt_msgs::PoseFromArtifact>(service_name);
   subt_msgs::PoseFromArtifact srv;
-  srv.request.robot_name.data = robot_name;
+  srv.request.robot_name.data = "COSTAR_HUSKY";
 
   // ensure that transform between map->base_link is available before calling service
   if (!tf_buffer.canTransform(map_frame, base_link_frame, ros::Time(0), ros::Duration(5.0)))

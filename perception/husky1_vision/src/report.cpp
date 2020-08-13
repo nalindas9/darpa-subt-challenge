@@ -22,11 +22,26 @@ University of Maryland, College Park
 #include <boost/ref.hpp>
 #include <ignition/msgs.hh>
 #include <string>
+#include <geometry_msgs/Point.h>
+#include <vector>
 
+// bool to store if there is an artifact to report
 bool artifact_to_report = false;
-std::string detected_artifact = "None";
+// Detected artifact
+struct Artifact{
+    std::string type; 
+    geometry_msgs::Point position;
+};
 
+
+Artifact detected_artifact;
+// Detected Robot Position
+geometry_msgs::Point husky1_pos;
+
+// Function prototypes
 void artifactCallback(const std_msgs::String::ConstPtr&);
+std::vector<std::string> removeDupWord(std::string);
+void husky1PositionCallback(const std_msgs::String::ConstPtr&);
 void BaseStationCallback(
     const std::string&,
     const std::string&,
@@ -38,11 +53,20 @@ void ReportArtifacts(
     subt::CommsClient&
 );
 
+std::unordered_map<std::string, uint32_t> artifact_reports;
+
+
 int main(int argc, char **argv){
+    // Initialize ROS node
     ros::init(argc, argv, "report");
     ros::NodeHandle report;
+    // Subscribe to artifact topic
     ros::Subscriber sub = report.subscribe("artifact", 100, artifactCallback);
-    std::unordered_map<std::string, uint32_t> artifact_reports;
+    // Subscribe to the husky1_position topic
+    ros::Subscriber sub2 = report.subscribe("husky1_position", 100, husky1PositionCallback);
+    // Store artifact report format types in Hashmap
+    artifact_reports["Backpack"] = static_cast<uint32_t>(subt::ArtifactType::TYPE_BACKPACK);
+    artifact_reports["Survivor"] = static_cast<uint32_t>(subt::ArtifactType::TYPE_RESCUE_RANDY);
     /*
       {
     TYPE_BACKPACK = 0,
@@ -61,8 +85,7 @@ int main(int argc, char **argv){
     TYPE_ROPE
   };
     */
-    artifact_reports["Backpack"] = static_cast<uint32_t>(subt::ArtifactType::TYPE_BACKPACK);
-    artifact_reports["Survivor"] = static_cast<uint32_t>(subt::ArtifactType::TYPE_RESCUE_RANDY);
+    
     ROS_INFO("Reporting Artifact ...");
     // Set up communications with the base station for artifact report
     subt::CommsClient commsClient("COSTAR_HUSKY");
@@ -74,14 +97,46 @@ int main(int argc, char **argv){
     return 0;
 }
 
+// Function to split string
+std::vector<std::string> removeDupWord(std::string str){
+    std::vector<std::string> string_arr;
+    std::string word = ""; 
+   for (auto x : str) 
+   { 
+       if (x == ' ') 
+       { 
+           //cout << word << endl; 
+           string_arr.push_back(word);
+           word = ""; 
+       } 
+       else
+       { 
+           word = word + x; 
+       } 
+   }  
+   string_arr.push_back(word);
+   //cout << word << endl; 
+   return string_arr;
+} 
+
 // Artifact topic subscriber callback
 void artifactCallback(const std_msgs::String::ConstPtr& msg){
     std::string artifact = msg->data.c_str();
     if (artifact != "None"){
         ROS_INFO_STREAM("Artifact detected: " << artifact);
         artifact_to_report = true;
-        detected_artifact = artifact;
+        detected_artifact.type = artifact;
     }   
+}
+
+void husky1PositionCallback(const std_msgs::String::ConstPtr& msg){
+    std::string position = msg->data.c_str();
+    std::vector<std::string> husky1_position;
+    //ROS_INFO_STREAM("Husky1 Position recieved: " << position);
+    husky1_position = removeDupWord(position);
+    detected_artifact.position.x = std::stoi(husky1_position[0]);
+    detected_artifact.position.y = std::stoi(husky1_position[1]);
+    detected_artifact.position.z = std::stoi(husky1_position[2]);
 }
 
 // Base Station Callback
@@ -109,10 +164,10 @@ void ReportArtifacts(const ros::TimerEvent&, subt::CommsClient& commsClient){
     subt::msgs::Artifact artifact;
     // Set Artifact type and pose
     ignition::msgs::Pose pose;
-    pose.mutable_position()->set_x(70.661);
-    pose.mutable_position()->set_y(-4.233);
-    pose.mutable_position()->set_z(0.168);
-    artifact.set_type(static_cast<uint32_t>(subt::ArtifactType::TYPE_BACKPACK)); 
+    pose.mutable_position()->set_x(detected_artifact.position.x);
+    pose.mutable_position()->set_y(detected_artifact.position.y);
+    pose.mutable_position()->set_z(detected_artifact.position.z);
+    artifact.set_type(artifact_reports[detected_artifact.type]); 
     artifact.mutable_pose()->CopyFrom(pose);
     // Serialize the Artifact
     std::string serializedData;
