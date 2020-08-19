@@ -14,6 +14,7 @@ University of Maryland, College Park
 #include<iostream>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Empty.h>
 #include <subt_msgs/PoseFromArtifact.h>
 #include <subt_communication_broker/subt_communication_client.h>
 #include <subt_ign/CommonTypes.hh>
@@ -24,6 +25,7 @@ University of Maryland, College Park
 #include <string>
 #include <geometry_msgs/Point.h>
 #include <vector>
+#include <cmath>
 
 // bool to store if there is an artifact to report
 bool artifact_to_report = false;
@@ -33,10 +35,18 @@ struct Artifact{
     geometry_msgs::Point position;
 };
 
+struct Robot{
+    geometry_msgs::Point position1;
+    geometry_msgs::Point position2;
+};
+
 
 Artifact detected_artifact;
 // Detected Robot Position
 geometry_msgs::Point husky1_pos;
+// Robot object
+Robot husky1;
+ros::Publisher pub;
 
 // Function prototypes
 void artifactCallback(const std_msgs::String::ConstPtr&);
@@ -60,10 +70,16 @@ int main(int argc, char **argv){
     // Initialize ROS node
     ros::init(argc, argv, "report");
     ros::NodeHandle report;
+    // Initialize husky1 position1
+    husky1.position1.x = 0;
+    husky1.position1.y = 0;
+    husky1.position1.z = 0;
     // Subscribe to artifact topic
     ros::Subscriber sub = report.subscribe("artifact", 100, artifactCallback);
     // Subscribe to the husky1_position topic
     ros::Subscriber sub2 = report.subscribe("husky1_position", 100, husky1PositionCallback);
+    // Publisher for deploying breadcrumbs
+    pub = report.advertise<std_msgs::Empty>("/COSTAR_HUSKY/breadcrumb/deploy", 1);
     // Store artifact report format types in Hashmap
     artifact_reports["Backpack"] = static_cast<uint32_t>(subt::ArtifactType::TYPE_BACKPACK);
     artifact_reports["Survivor"] = static_cast<uint32_t>(subt::ArtifactType::TYPE_RESCUE_RANDY);
@@ -137,6 +153,15 @@ void husky1PositionCallback(const std_msgs::String::ConstPtr& msg){
     detected_artifact.position.x = std::stoi(husky1_position[0]);
     detected_artifact.position.y = std::stoi(husky1_position[1]);
     detected_artifact.position.z = std::stoi(husky1_position[2]);
+    // If Euclidean distance between current pose of robot and last breadcrumbe deployed pose > threshold, then deploy another breadcrumb
+    if(sqrt((detected_artifact.position.x-husky1.position1.x)*(detected_artifact.position.x-husky1.position1.x) + (detected_artifact.position.y-husky1.position1.y)*(detected_artifact.position.y-husky1.position1.y)) > 40){
+        ROS_INFO_STREAM("Deploying breadcrumb ...");
+        std_msgs::Empty msg;
+        pub.publish(msg);
+        husky1.position1.x = detected_artifact.position.x;
+        husky1.position1.y = detected_artifact.position.y;
+        husky1.position1.z = 0;
+    }
 }
 
 // Base Station Callback
