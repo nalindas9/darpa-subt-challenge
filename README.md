@@ -9,3 +9,7 @@ This is the repository for the DARPA Subterranean Challenge Virtual Track- Augus
 
 [![](http://img.youtube.com/vi/gSMiLLx8Y0Y/0.jpg)](http://www.youtube.com/watch?v=gSMiLLx8Y0Y "")
 
+## Credits
+The following references were helpful for this project:
+### Perception
+- [PyTorch-YOLOv3](https://github.com/eriklindernoren/PyTorch-YOLOv3)
