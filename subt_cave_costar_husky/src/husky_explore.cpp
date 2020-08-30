@@ -15,7 +15,7 @@ std::vector<float> lidar_angle = {0.0};
 int num_sector = 180;
 float c = 1.0;
 float a = 5.0;
-float b = 2.2; // larger b allows closer obstacles
+float b = 2.0; // larger b allows closer obstacles
 float bin_threshold = 4.5;
 int len_threshold = 5;
 //***********************************************

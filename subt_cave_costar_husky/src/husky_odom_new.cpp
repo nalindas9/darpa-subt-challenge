@@ -25,7 +25,7 @@ int main(int argc, char **argv)
         try
         {
             pose_listener.lookupTransform("/map", "/camera", ros::Time(0), transform);
-            ROS_INFO("publishing data to /COSTAR_HUSKY/laser_odom");
+            // ROS_INFO("publishing data to /COSTAR_HUSKY/laser_odom");
             // cout << "x: " << transform.getOrigin().x() << endl;
             // cout << "y: " << transform.getOrigin().y() << endl;
             // cout << "z: " << transform.getOrigin().z() << endl;

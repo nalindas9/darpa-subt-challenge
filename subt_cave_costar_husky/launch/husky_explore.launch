@@ -6,8 +6,11 @@
     <!-- start octomapping -->
     <!-- <include file="$(find subt_cave_costar_husky)/launch/husky_octomap.launch" /> -->
 
+    <!-- start loam -->
+    <include file="$(find lego_loam)/launch/run.launch"/>
+
     <!-- publish laser odom data -->
-    <include file="$(find subt_cave_costar_husky)/launch/husky_odom_new.launch" />
+    <node pkg="subt_cave_costar_husky" type="husky_odom_new" name="husky_odom_new" output="screen"/> 
 
     <!-- start exploration -->
     <node pkg="subt_cave_costar_husky" type="husky_explore" name="husky_explore" output="screen"/> 
