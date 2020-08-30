@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   tf
+  # subt_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -107,8 +108,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES subt_cave_costar_husky
-#  CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs tf
+#  LIBRARIES subt_cave_x1
+#  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -208,6 +209,12 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+add_service_files(
+  FILES
+  PoseFromArtifact.srv
+)
+
+
 add_executable(readLidar src/readLidar.cpp)
 target_link_libraries(readLidar ${catkin_LIBRARIES})
 
@@ -216,3 +223,6 @@ target_link_libraries(husky_explore ${catkin_LIBRARIES})
 
 add_executable(husky_odom2base src/husky_odom2base.cpp)
 target_link_libraries(husky_odom2base ${catkin_LIBRARIES})
+
+add_executable(husky_odom_new src/husky_odom_new.cpp)
+target_link_libraries(husky_odom_new ${catkin_LIBRARIES})

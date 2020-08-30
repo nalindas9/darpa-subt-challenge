@@ -22,9 +22,9 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &msg)
 
 void odom_callback(const nav_msgs::Odometry::ConstPtr &msg)
 {
-    *x = msg->pose.pose.position.x;
-    *y = msg->pose.pose.position.y;
-    *z = msg->pose.pose.position.z;
+    *x = msg->pose.pose.position.x - 5.9999;
+    *y = msg->pose.pose.position.y + 4.9999;
+    *z = msg->pose.pose.position.z + 0.1322;
     *qw = msg->pose.pose.orientation.w;
     *qx = msg->pose.pose.orientation.x;
     *qy = msg->pose.pose.orientation.y;
@@ -36,7 +36,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &msg)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "odometry_publisher");
+    ros::init(argc, argv, "odom_frame_publisher");
 
     ros::NodeHandle n;
     ros::Subscriber odom_sub = n.subscribe("/COSTAR_HUSKY/odom", 10, odom_callback);

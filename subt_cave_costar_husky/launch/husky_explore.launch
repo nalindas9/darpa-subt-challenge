@@ -4,11 +4,12 @@
     <include file="$(find subt_cave_costar_husky)/launch/husky_pc2scan.launch" />
 
     <!-- start octomapping -->
-    <include file="$(find subt_cave_costar_husky)/launch/husky_octomap.launch" />
+    <!-- <include file="$(find subt_cave_costar_husky)/launch/husky_octomap.launch" /> -->
+
+    <!-- publish laser odom data -->
+    <include file="$(find subt_cave_costar_husky)/launch/husky_odom_new.launch" />
 
     <!-- start exploration -->
     <node pkg="subt_cave_costar_husky" type="husky_explore" name="husky_explore" output="screen"/> 
-
-
 
 </launch>

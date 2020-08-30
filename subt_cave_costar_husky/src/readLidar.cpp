@@ -8,6 +8,8 @@
 
 void lidar_callback(const sensor_msgs::PointCloud2::ConstPtr &msg)
 {
+    for (int i = 0; i < msg->data.size(); i++)
+        std::cout << msg->data[i];
 }
 
 int main(int argc, char **argv)
@@ -16,10 +18,12 @@ int main(int argc, char **argv)
 
     ros::NodeHandle n;
     ros::Subscriber lidar_sub = n.subscribe("/COSTAR_HUSKY/points", 1000, lidar_callback);
-    ros::Publisher vel_pub = n.advertise<geometry_msgs::Twist>("COSTAR_HUSKY/cmd_vel", 10);
+    // ros::Publisher vel_pub = n.advertise<geometry_msgs::Twist>("COSTAR_HUSKY/cmd_vel", 10);
 
     while (ros::ok())
     {
         ros::spinOnce();
     }
+
+    return 0;
 }

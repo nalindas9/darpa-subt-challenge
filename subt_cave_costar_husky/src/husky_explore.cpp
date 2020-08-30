@@ -6,22 +6,21 @@
 #include <math.h>
 
 geometry_msgs::Twist vel_command;
-float last_ang_vel = 0.0;
 
-float cliff_range = 100.0;
-std::vector<float> lidar_range ={ 0.0 };
-std::vector<float> lidar_angle ={ 0.0 };
-
-bool RECOVERY = false;
+float cliff_range = 0.5;
+std::vector<float> lidar_range = {0.0};
+std::vector<float> lidar_angle = {0.0};
 
 //*****************  VFH params *****************
 int num_sector = 180;
 float c = 1.0;
-float a = 100.0;
-float b = 10.0;
-float bin_threshold = 60.0;
-int len_threshold = 2;
+float a = 5.0;
+float b = 2.2; // larger b allows closer obstacles
+float bin_threshold = 4.5;
+int len_threshold = 5;
 //***********************************************
+
+int RECOVERY = 0;
 
 std::vector<float> calc_magnitude()
 {
@@ -31,13 +30,24 @@ std::vector<float> calc_magnitude()
         magnitude.push_back(c * c * (a - b * (lidar_range[i])));
     }
     // hole detection
-    if (cliff_range >= 1.0)
+    if (cliff_range > 1.0)
     {
         std::cout << "hole detected" << std::endl;
-        for (int i = 0; i < 6; i++)
+        RECOVERY = 1;
+        for (int i = 0; i < len_threshold / 2; i++)
         {
-            magnitude[round(num_sector/2)+i] = a;
-            magnitude[round(num_sector/2)-i] = a;
+            magnitude[round(num_sector / 2) + i] = a;
+            magnitude[round(num_sector / 2) - i] = a;
+        }
+    }
+    else if (cliff_range < 0.4)
+    {
+        std::cout << "rock detected" << std::endl;
+        RECOVERY = 1;
+        for (int i = 0; i < len_threshold / 2; i++)
+        {
+            magnitude[round(num_sector / 2) + i] = a;
+            magnitude[round(num_sector / 2) - i] = a;
         }
     }
     return magnitude;
@@ -65,6 +75,7 @@ std::vector<int> calc_histogram(std::vector<float> mag)
         else
             hist_bin.push_back(0);
     }
+
     return hist_bin;
 }
 
@@ -75,6 +86,7 @@ int select_sector(std::vector<int> hist_bin)
     std::vector<int> candidates;
     int mid = round(hist_bin.size() / 2);
     int valley_idx = mid;
+    int sum = 0; // count number of 0 sectors
     // find & store all admissible valleys
     for (int i = 0; i < hist_bin.size(); i++)
     {
@@ -95,30 +107,42 @@ int select_sector(std::vector<int> hist_bin)
         {
             curr_len++;
         }
+        sum += hist_bin[i];
     }
-    // find the valley needs minimum turning
-    int dist = 1000;
-    for (int i = 0; i < candidates.size(); i++)
+    if ((num_sector - sum) >= len_threshold)
     {
-        if (abs(candidates[i] - mid) < dist)
+        // find the valley needs minimum turning
+        int dist = 1000;
+        for (int i = 0; i < candidates.size(); i++)
         {
-            valley_idx = candidates[i];
-            dist = abs(candidates[i] - mid);
+            if (abs(candidates[i] - mid) < dist)
+            {
+                valley_idx = candidates[i];
+                dist = abs(candidates[i] - mid);
+            }
         }
     }
-
+    else
+    {
+        // no valley detected
+        valley_idx = -1;
+        RECOVERY = 1;
+    }
     return valley_idx;
 }
 
 void vel_control(int valley_idx)
 {
-    float kp = 0.0025;
+    float kp = 0.022;
     float error = valley_idx - num_sector / 2;
-    // float ang_vel = 0.125 * kp * error + (1 - 0.125) * last_ang_vel; // IIR filter
     float ang_vel = kp * error;
-    vel_command.linear.x = 0.4;
+    // min angular velocity
+    if (ang_vel > 0 && ang_vel <= 0.1)
+        ang_vel = 0.1;
+    if (ang_vel < 0 && ang_vel >= -0.1)
+        ang_vel = -0.1;
+    vel_command.linear.x = 0.3;
     vel_command.angular.z = ang_vel;
-    last_ang_vel = ang_vel;
 }
 
 void vfh()
@@ -133,7 +157,7 @@ void vfh()
     std::cout << "histogram:\n";
     for (int i = 0; i < hist_bin.size(); i++)
         std::cout << hist_bin[i];
-    std::cout << "\nval_idx: " << valley_idx << " ang_vel:" << vel_command.angular.z << std::endl;
+    std::cout << "\nval_idx:" << valley_idx << " ang_vel:" << vel_command.angular.z << std::endl;
 }
 
 void view_lidar()
@@ -184,10 +208,52 @@ int main(int argc, char **argv)
     ROS_INFO("start exploration");
 
     ros::Rate loop_rate(40);
+    int backward_counter = 0;
+    int spin_counter = 0;
+    std::cout << RECOVERY << std::endl;
     while (n.ok())
     {
         ros::spinOnce();
-        vfh();
+        if (RECOVERY == 0)
+        {
+            vfh();
+        }
+        else
+        {
+            // recovery behavior
+            if (backward_counter < 50)
+            {
+                vel_command.linear.x = -0.2;
+                vel_command.angular.z = 0.0;
+                backward_counter++;
+            }
+            else
+            {
+                if (spin_counter < 100)
+                {
+                    // use lidar distance to determine spin left or right
+                    float left_sum = 0;
+                    float right_sum = 0;
+                    for (auto beam = lidar_range.end(); beam > lidar_range.end() - 80; beam--)
+                        left_sum += *beam;
+                    for (auto beam = lidar_range.begin(); beam < lidar_range.begin() + 80; beam++)
+                        right_sum += *beam;
+                    // if (lidar_range.back() > lidar_range.front())
+                    if (left_sum > right_sum)
+                        vel_command.angular.z = 0.3;
+                    else
+                        vel_command.angular.z = -0.3;
+                    vel_command.linear.x = 0.0;
+                    spin_counter++;
+                }
+                else
+                {
+                    backward_counter = 0;
+                    spin_counter = 0;
+                    RECOVERY = 0;
+                }
+            }
+        }
         vel_pub.publish(vel_command);
         loop_rate.sleep();
     }
