@@ -15,7 +15,7 @@ std::vector<float> lidar_angle = {0.0};
 int num_sector = 180;
 float c = 1.0;
 float a = 5.0;
-float b = 2.0; // larger b allows closer obstacles
+float b = 1.35; // larger b allows closer obstacles  2.0
 float bin_threshold = 4.5;
 int len_threshold = 5;
 //***********************************************
@@ -30,7 +30,7 @@ std::vector<float> calc_magnitude()
         magnitude.push_back(c * c * (a - b * (lidar_range[i])));
     }
     // hole detection
-    if (cliff_range > 1.0)
+    if (cliff_range > 1.38)
     {
         std::cout << "hole detected" << std::endl;
         RECOVERY = 1;
@@ -40,7 +40,7 @@ std::vector<float> calc_magnitude()
             magnitude[round(num_sector / 2) - i] = a;
         }
     }
-    else if (cliff_range < 0.4)
+    else if (cliff_range < 0.35)
     {
         std::cout << "rock detected" << std::endl;
         RECOVERY = 1;
@@ -133,7 +133,7 @@ int select_sector(std::vector<int> hist_bin)
 
 void vel_control(int valley_idx)
 {
-    float kp = 0.022;
+    float kp = 0.008; // 0.010
     float error = valley_idx - num_sector / 2;
     float ang_vel = kp * error;
     // min angular velocity
@@ -141,7 +141,7 @@ void vel_control(int valley_idx)
         ang_vel = 0.1;
     if (ang_vel < 0 && ang_vel >= -0.1)
         ang_vel = -0.1;
-    vel_command.linear.x = 0.3;
+    vel_command.linear.x = 0.35;
     vel_command.angular.z = ang_vel;
 }
 
@@ -229,17 +229,17 @@ int main(int argc, char **argv)
             }
             else
             {
-                if (spin_counter < 100)
+                if (spin_counter < 80)
                 {
                     // use lidar distance to determine spin left or right
                     float left_sum = 0;
                     float right_sum = 0;
-                    for (auto beam = lidar_range.end(); beam > lidar_range.end() - 80; beam--)
+                    for (auto beam = lidar_range.end(); beam > lidar_range.end() - lidar_range.size() / 2; beam--)
                         left_sum += *beam;
-                    for (auto beam = lidar_range.begin(); beam < lidar_range.begin() + 80; beam++)
+                    for (auto beam = lidar_range.begin(); beam < lidar_range.begin() + lidar_range.size() / 2; beam++)
                         right_sum += *beam;
                     // if (lidar_range.back() > lidar_range.front())
-                    if (left_sum > right_sum)
+                    if (left_sum >= right_sum)
                         vel_command.angular.z = 0.3;
                     else
                         vel_command.angular.z = -0.3;
