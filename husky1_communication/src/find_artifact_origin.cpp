@@ -17,6 +17,7 @@ University of Maryland, College Park
 #include "tf2_ros/static_transform_broadcaster.h"
 #include "tf2_ros/transform_listener.h"
 #include "ToTransformStamped.h"
+#include <tf/transform_listener.h>
 
 std::string robot_name;
 std::string base_link_frame;
@@ -36,7 +37,9 @@ int main(int argc, char *argv[])
   private_nh.param("base_link_frame", base_link_frame, robot_name);
   private_nh.param("map_frame", map_frame, robot_name + "/map");
   private_nh.param("artifact_origin_frame", artifact_origin_frame, std::string("artifact_origin"));
-  map_frame = "cave_qual";
+  map_frame = "map";
+  robot_name = "COSTAR_HUSKY";
+  base_link_frame = "COSTAR_HUSKY";
   ROS_INFO_STREAM(
     "artifact_origin_finder values..." << std::endl <<
     "robot_name: " << robot_name << std::endl <<
@@ -46,12 +49,14 @@ int main(int argc, char *argv[])
 
   tf2_ros::StaticTransformBroadcaster static_tf_broadcaster;
   tf2_ros::Buffer tf_buffer;
+  //tf::TransformListener tf_listener;
   tf2_ros::TransformListener tf_listener(tf_buffer);
-
   // set up service call
   ros::ServiceClient client = nh.serviceClient<subt_msgs::PoseFromArtifact>(service_name);
   subt_msgs::PoseFromArtifact srv;
   srv.request.robot_name.data = robot_name;
+  bool state = true;
+  // ensure that transform between map->base_link is available before calling service
 
   // ensure that transform between map->base_link is available before calling service
   if (!tf_buffer.canTransform(map_frame, base_link_frame, ros::Time(0), ros::Duration(5.0)))

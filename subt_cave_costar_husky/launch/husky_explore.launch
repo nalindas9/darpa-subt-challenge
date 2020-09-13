@@ -1,4 +1,8 @@
 <launch>
+    <arg name="node_start_delay1" default="1.5" />  
+    <arg name="node_start_delay2" default="2.0" />  
+    <arg name="node_start_delay3" default="2.5" />  
+    <arg name="node_start_delay4" default="3.0" />  
 
     <!-- create laserscan from pointcloud for VFH -->
     <include file="$(find subt_cave_costar_husky)/launch/husky_pc2scan.launch" />
@@ -14,5 +18,17 @@
 
     <!-- start exploration -->
     <node pkg="subt_cave_costar_husky" type="husky_explore" name="husky_explore" output="screen"/> 
+	
+    <!-- broadcast static transform map->artifact_origin -->
+    <node pkg="husky1_communication" type="find_artifact_origin" name="find_artifact_origin" launch-prefix="bash -c 'sleep $(arg node_start_delay1); $0 $@' " output="screen"/>
+    
+    <!-- start husky1 state listener -->
+    <node pkg="husky1_communication" type="husky1_state_listener" name="husky1_state_listener" launch-prefix="bash -c 'sleep $(arg node_start_delay2); $0 $@' " output="screen"/>
+
+    <!-- start artifact to base station reporting node -->
+    <node pkg="husky1_communication" type="report" name="report" launch-prefix="bash -c 'sleep $(arg node_start_delay3); $0 $@' " output="screen"/>
+    
+    <!-- start artifact detector vision node -->
+    <node pkg="husky1_vision" type="object_detector_yolo.py" name="object_detector" launch-prefix="bash -c 'sleep $(arg node_start_delay4); $0 $@' " output="screen"/>
 
 </launch>
